@@ -1,8 +1,34 @@
 {
-    "name": "upload_image_in_Riot",
-    "version": "1.0.0",
-    "keywords": ["util", "functional", "server", "client", "browser"],
-    "author": "ozone",
-    "contributors": [],
-    "dependencies": {}
+  "name": "upload_image_in_riot",
+  "version": "1.0.0",
+  "keywords": [
+    "util",
+    "functional",
+    "server",
+    "client",
+    "browser"
+  ],
+  "engines": {
+    "node": "5.9.1"
+  },
+  "author": "ozone",
+  "contributors": [],
+  "dependencies": {
+    "express": "^4.14.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiriti999/UploadImageInRiot.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kiriti999/UploadImageInRiot/issues"
+  },
+  "homepage": "https://github.com/kiriti999/UploadImageInRiot#readme",
+  "description": ""
 }
