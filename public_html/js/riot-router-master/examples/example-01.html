@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Riot App Example 01</title>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/semantic-ui/2/semantic.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <style>
+    .content.app {
+      display: block;
+      background-color: #FFFFFF;
+      margin: 0 auto;
+      margin-top: 40px;
+      box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.05);
+      border-left: 1px solid #DDDDDD;
+      border-right: 1px solid #DDDDDD;
+      border-bottom: 1px solid #DDDDDD;
+      min-height: 400px;
+    }
+
+    .menu.app {
+      border-radius: 0;
+    }
+    .content.app {
+      display: block;
+      padding: 1em 2em 7em;
+    }
+    route, route > * {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <app/>
+
+  <!--
+    App UI
+  -->
+  <script type="riot/tag">
+    <!-- Login page -->
+    <login>
+      <div>
+        <input name="username"/>
+        <button onClick={this.login}>Login</button>
+      </div>
+      login() {
+        window.user = this.username;
+        localStorage.setItem('user', window.user);
+        // Go to home page
+        riot.route('#/');
+      }
+    </login>
+
+    <logout>
+      window.user = null;
+      localStorage.removeItem('user');
+      // Go to login page
+      riot.route('#/login');
+    </logout>
+
+    <!-- Application -->
+    <app class="app">
+      <main-menu/>
+      <route class="ui container app content"/>
+    </app>
+
+    <!-- Main menu -->
+    <main-menu class="ui teal inverted top fixed app menu">
+      <div class="ui container">
+        <a class={item: true, active: menu.url.substring(1) === riot.router.current.uri} href="{menu.url}" each={menu in this.leftMenus}><i class="{menu.icon} icon" if={menu.icon}></i>{menu.text}</a>
+        <div class="right menu" if={this.rightMenus.length}>
+          <a class={item: true, active: menu.url.substring(1) === riot.router.current.uri} href="{menu.url}" each={menu in this.rightMenus}><i class="{menu.icon} icon" if={menu.icon}></i>{menu.text}</a>
+        </div>
+      </div>
+      createLeftMenus() {
+        if (!window.user)
+          return [
+          ];
+        return [
+          {url: '#/', text: 'Home', icon: 'home'},
+          {url: '#/about', text:'About', icon: 'info'},
+          {url: '#/users', text:'Users', icon: 'users'},
+          {url: '#/users/top', text:'Top Users', icon: 'favorite'},
+          {url: '#/users/user/123', text: 'User #123', icon: 'user'},
+          {url: '#/users/user/456', text: 'User #456', icon: 'user'},
+          {url: '#/users/user/789?animate=true', text: 'Animate User', icon: 'user'},
+        ];
+      }
+      createRightMenus() {
+        if (!window.user)
+          return [
+            {url: '#/login', text: 'Login', icon: 'sign in'}
+          ];
+        return [
+          {url: '#/logout', text: 'Logout', icon: 'sign out'},
+        ];
+      }
+
+      createMenus() {
+        this.leftMenus = this.createLeftMenus();
+        this.rightMenus = this.createRightMenus();
+      }
+
+
+      // On route update, update this fragment.
+      riot.router.on('route:updated', function() {
+        this.createMenus();
+        this.update();
+      }.bind(this));
+    </main-menu>
+
+    <!-- Users page -->
+    <users>
+      <route if={!userId} class="ui header"/>
+      <div class="ui grid">
+        <div class="{userId ? 'six' : 'sixteen'} wide column">
+          <div class="ui top attached segment">
+            <div class="ui fluid icon input  ">
+              <input name="search" onkeyup={this.filter} type="text" placeholder="Filter users..."/>
+            </div>
+          </div>
+          <div class="ui attached segment">
+            <table class="ui very basic table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Id</th>
+                  <th if={!userId}>Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr each={user in this.users} class={active: userId == user.id}>
+                  <td><a href="#/u/{user.id}">{user.id}</a></td>
+                  <td><a href="#/u/{user.id}">{user.name}</a></td>
+                  <td if={!userId}>{user.email}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <route class="ten wide column" if={userId}/>
+      </div>
+
+      this.users = window.users.getUsers();
+
+      filter() {
+        var keyword = this.search.value.toLowerCase();
+        this.users = window.users.filter(function(user) {
+          var target = user.name.toLowerCase() + user.id + user.email.toLowerCase();
+          if (target.indexOf(keyword) > -1) {
+            return true;
+          }
+          return false;
+        });
+        return true;
+      }
+
+      this.on('update', function() {
+        this.userId = riot.router.current.params.userId;
+      }.bind(this));
+    </users>
+
+    <!-- User detail page fragment -->
+    <user>
+      <div class="ui segment">
+        <route />
+        <div>{user.id} - {user.name}</div>
+      </div>
+
+      updateContent(opts) {
+        if (!opts) return;
+        this.userId = opts.userId;
+        this.animate = opts.animate === "true";
+        this.user = window.users.getUser(this.userId);
+        if (this.user === null) {
+          riot.route('/not-found');
+        }
+      }
+      this.on('update', this.updateContent.bind(this));
+      this.on('updated', function() {
+        var $el = jQuery(this.root).clearQueue();
+        if (this.animate)
+          $el.fadeOut().fadeIn().fadeOut().fadeIn();
+      }.bind(this));
+      this.updateContent(opts);
+    </user>
+
+    <hello>
+      <div>Hello</div>
+    </hello>
+
+    <!-- About page -->
+    <about>
+      <div class="ui segment">
+        <h2>About your company</h2>
+        <a href="#/company">Old link</a>
+      </div>
+    </about>
+
+    <!-- Home page -->
+    <home>
+      <span>Home!</span>
+    </home>
+
+    <!-- Users default page fragment -->
+    <users-home>
+      <h4>{text}</h4>
+      this.text = opts.text;
+    </users-home>
+
+    <!-- Not found page -->
+    <not-found>
+      <div class="ui segment">Page '{riot.router.current.uri}' not found! </div>
+    </not-found>
+  </script>
+  <script src="../node_modules/riot/riot+compiler.min.js"></script>
+  <script src="../lib/router.js"></script>
+
+  <!--
+    App Services
+  -->
+  <script>
+      function UserService() {
+      var _users = [
+        {id: 123, name: "Gabriel", email: "gabriel@acme.com"},
+        {id: 456, name: "John", email: "john@awesome.com"},
+        {id: 789, name: "Mark", email: "mark@acme.com"}
+      ];
+      this.getUser = function(userId) {
+        var theUserArray = Array.prototype.filter.call(_users, function(user) { return user.id == userId });
+        return theUserArray.length > 0 ? theUserArray[0] : null;
+      };
+      this.getUsers = function() {
+        return _users;
+      };
+      this.filter = function(fn) {
+        return Array.prototype.filter.call(_users, fn);
+      }
+    }
+  </script>
+
+  <!--
+    Page initialization
+  -->
+  <script>
+    // Initialize the user store
+    window.users = new UserService();
+    // Initialize current user
+    window.user = localStorage.getItem('user');
+
+    // Redirect unlogged users to /login page
+    function securityFilter(request, response, next) {
+      try {
+        return next();
+      } finally {
+        if (!window.user && request.uri !== '/login') {
+          response.redirectTo = '/login';
+        }
+      }
+    }
+
+    // Mount all Riot tags.
+    riot.mount('*');
+
+    var Route = riot.router.Route,
+        DefaultRoute = riot.router.DefaultRoute,
+        NotFoundRoute = riot.router.NotFoundRoute,
+        RedirectRoute = riot.router.RedirectRoute;
+
+    // Apply security filter to Riot-Router
+    riot.router.use(securityFilter);
+
+    // My app routes
+    riot.router.routes([
+      new DefaultRoute({tag: 'home'}),
+      new Route({tag: 'login'}),
+      new Route({tag: 'logout'}),
+      new Route({tag: 'about'}),
+      new Route({tag: 'users', updatable:true}).routes([
+         new Route({path:'top', tag: 'users-home', api: {text: 'Select a top user'}}),
+         new Route({path: '/user/:userId', updatable: true, tag: 'user'}).routes([
+          new DefaultRoute({tag: 'hello'})
+         ]),
+         new DefaultRoute({tag: 'users-home', api: {text: 'Select a user'}}),
+         new NotFoundRoute({tag: 'not-found'})
+       ]),
+      new NotFoundRoute({tag: 'not-found'}),
+      new RedirectRoute({from: 'company', to: 'about'}),
+      new RedirectRoute({from: 'u', to: 'users/user'}),
+      new RedirectRoute({from: 'a', to: 'b'}),
+      new RedirectRoute({from: 'b', to: 'c'}),
+      new RedirectRoute({from: 'c', to: 'company'}),
+    ]);
+
+    // Start routing
+    riot.router.start();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "js",
+  "authors": [
+    "kiriti <kiriti.komaragiri@ozonetel.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "riot": "^2.6.7",
+    "bootstrap": "^3.3.7"
+  }
+}

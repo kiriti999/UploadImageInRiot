@@ -1,0 +1,232 @@
+<rsc-secured1>
+    <style>
+        html, body { height: 100%; }
+
+        ul#images li{
+            display: inline;
+        }
+
+        .thumbnail {
+            display: inline !important;
+            width:200px;
+            padding: 2px;
+            height: 194px;
+            margin: 10px 0px;
+        }
+
+        .thumbnailName{
+            width:200px; text-align:center; padding: 2px;
+        }
+
+        .mybox {
+            border: 1px solid bisque;
+            width: 80%;
+            min-height: 220px;
+            height: 50%;
+            margin-top: 50px;
+        }
+
+        .bottom-aligned {
+            box-sizing: border-box;
+        }
+
+        #removeBtn{
+            margin: 11px 1px;
+            position: absolute;
+            padding: 3px 7px;
+        }
+
+        #addNewCourse{
+            width: 200px;
+            height: 200px;
+            margin-top: 12px;
+        }
+
+        .vertical-middle{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #editTags button{
+            margin-left: 2px;
+            border-radius: 0px;
+            padding: 3px 9px;
+        }
+        #editTags{
+            resize: horizontal;
+            text-align: center;
+            margin-left: 8px;
+        }
+        #inputText{
+            width: 145px;
+            resize: horizontal;
+            /* overflow: auto; */
+            float: left;
+        }
+    </style>
+
+    <div class="container">
+        <input id="filesToUpload" onchange="{showImages}" type="file" accept="image/*" multiple/>
+        <div id="dropBox" class="mybox col-lg-12" ondragover="{ondragOver}" ondrop="{showImages}">
+            <span class="col-lg-3" each="{option, choice in data.images}">
+                <button class="btn btn-danger btn-sm" id="removeBtn" onclick="{deleteImage}">
+                    <span class="glyphicon glyphicon-trash"></span>
+                </button>
+                <img class='thumbnail' src="{option.imageUrl}" title='preview image'/>
+                <div if="{!data.wantToEdit}" class='thumbnailName' id="thumbnailName" ondblclick="{editImageName}">{option.imageName}</div>
+                <div if="{data.wantToEdit}" id="editTags">
+                    <input type="text" value="" id="inputText"/>
+                    <button class="btn btn-default btn-sm" style="float: left" onclick="{saveImageName}">
+                        <span class="glyphicon glyphicon-ok"></span>
+                    </button>
+                </div>
+            </span>
+            <span class="col-lg-3 vertical-middle" id="addNewCourse">
+                <button class="btn btn-success btn-sm" onclick="{addInfo}">
+                    <span class="glyphicon glyphicon-plus"></span> Add
+                </button>
+            </span>
+        </div>
+        <div class="bottom-aligned col-lg-12" style="padding-left: 0px;">
+            <button type="button" class="btn btn-success btn-s" onclick="{uploadAll}">
+                <span class="glyphicon glyphicon-upload"></span> Upload all
+            </button>
+        </div>
+    </div>
+
+    <script>
+        var self = this;
+        self.data = {};
+        self.all = [];
+        self.data.images = [];
+        self.data.wantToEdit = false;
+        var config = {
+        imageId: "imageName"
+        }
+
+        editImageName(e){
+        self.data.wantToEdit = true;
+        self.data.valueInEdit = document.getElementById('thumbnailName').innerHTML;
+        self.update(self.data.wantToEdit);
+        console.log("input value", document.getElementById('inputText').value);
+        document.getElementById('inputText').value = self.data.valueInEdit;
+        }
+        saveImageName(e){
+        self.data.valueInEdit = document.getElementById('inputText').value;
+        self.data.wantToEdit = false;
+        self.update(self.data.wantToEdit);
+        document.getElementById('thumbnailName').innerHTML = self.data.valueInEdit;
+        console.log("edited text val is = ", self.data.valueInEdit);
+        }
+
+        addInfo(e){
+        console.log("canvas called");
+        e.stopPropagation(); e.preventDefault();
+//            self.data.images.push({imageName:"some info", imageUrl:"some info"});
+        }
+
+        deleteImage(){
+        self.data.images.splice(0, 1);
+        console.log("self.data.images after delete==", self.data.images);
+        }
+
+        showImages(e){
+        e.stopPropagation(); e.preventDefault();
+        if (e.type == 'change'){
+        self._preview(e.target.files);
+        self.all.push(e.target.files);
+        } else{
+        self._preview(e.dataTransfer.files);
+        self.all.push(e.dataTransfer.files);
+        }
+        }
+
+        _preview(data){
+        if (window.File && window.FileList && window.FileReader){
+        var output = document.getElementById("dropBox");
+        var files = data;
+        if (files.length > 0){
+        for (var i = 0; i < files.length; i++){
+        if (files[i].type.match('image.*')) {
+        if (files[0].size < 2097152) {
+        (function(j){
+        var reader = new FileReader();
+        reader.addEventListener("load", function (event) {
+        self.data.images.push({imageName:files[j].name, imageUrl:event.target.result});
+        console.log("self.data.images==", self.data.images);
+        self.update();
+        });
+        //Read the image
+        reader.readAsDataURL(files[i]);
+        })(i);
+        } else {
+        alert("Image Size is too big. Minimum size is 2MB.");
+        $(this).val("");
+        }
+        } else {
+        alert("You can only upload image file.");
+        }
+        }
+        }
+        } else {
+        console.log("Your browser does not support File API");
+        }
+        }
+
+        _startUpload = function(){
+        if (self.all.length > 0){
+        for (var k = 0; k < self.all.length; k++){
+        var file = self.all[k];
+//                    self._uploader(file,0);
+        }
+        }
+        }
+
+        _uploader = function(file, f){
+        if (typeof file[f] != undefined){
+        var data = new FormData();
+        var ids = file[f].name;
+        data.append('file', file[f]);
+        data.append('index', ids);
+//                $(".dfiles[rel='"+ids+"']").find(".progress").show();
+        $.ajax({
+        type:"POST",
+                url:this.config.uploadUrl,
+                data:data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success:function(rponse){
+                $("#" + ids).hide();
+                var obj = $(".dfiles").get();
+                $.each(obj, function(k, fle){
+                if ($(fle).attr("rel") == response){
+                $(fle).slideUp("normal", function(){ $(this).remove(); });
+                }
+                });
+                if (f + 1 < file.length) {
+                self._uploader(file, f + 1);
+                }
+                }
+        });
+        } else
+                console.log("Invalid file format - " + file[f].name);
+        }
+
+//        _unique(){
+//            return self.replace(/[a-zA-Z]/g , function(c){
+//                return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
+//            });
+//        }
+
+        ondragOver(e){
+        e.stopPropagation(); e.preventDefault();
+        var input = self.root.querySelector('dropBox');
+        console.log("input==", input);
+        return false;
+        }
+
+
+    </script>
+</rsc-secured1>
+
