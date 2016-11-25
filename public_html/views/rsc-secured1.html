@@ -1,97 +1,53 @@
 <rsc-secured1>
-    <style>
-        html, body { height: 100%; }
-
-        ul#images li{
-            display: inline;
-        }
-
-        .thumbnail {
-            display: inline !important;
-            width:200px;
-            padding: 2px;
-            height: 194px;
-            margin: 10px 0px;
-        }
-
-        .thumbnailName{
-            width:200px; text-align:center; padding: 2px;
-        }
-
-        .mybox {
-            border: 1px solid bisque;
-            width: 80%;
-            min-height: 220px;
-            height: 50%;
-            margin-top: 50px;
-        }
-
-        .bottom-aligned {
-            box-sizing: border-box;
-        }
-
-        #removeBtn{
-            margin: 11px 1px;
-            position: absolute;
-            padding: 3px 7px;
-        }
-
-        #addNewCourse{
-            width: 200px;
-            height: 200px;
-            margin-top: 12px;
-        }
-
-        .vertical-middle{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #editTags button{
-            margin-left: 2px;
-            border-radius: 0px;
-            padding: 3px 9px;
-        }
-        #editTags{
-            resize: horizontal;
-            text-align: center;
-            margin-left: 8px;
-        }
-        #inputText{
-            width: 145px;
-            resize: horizontal;
-            /* overflow: auto; */
-            float: left;
-        }
-    </style>
 
     <div class="container">
         <input id="filesToUpload" onchange="{showImages}" type="file" accept="image/*" multiple/>
-        <div id="dropBox" class="mybox col-lg-12" ondragover="{ondragOver}" ondrop="{showImages}">
-            <span class="col-lg-3" each="{option, choice in data.images}">
-                <button class="btn btn-danger btn-sm" id="removeBtn" onclick="{deleteImage}">
-                    <span class="glyphicon glyphicon-trash"></span>
-                </button>
-                <img class='thumbnail' src="{option.imageUrl}" title='preview image'/>
-                <div if="{!data.wantToEdit}" class='thumbnailName' id="thumbnailName" ondblclick="{editImageName}">{option.imageName}</div>
-                <div if="{data.wantToEdit}" id="editTags">
-                    <input type="text" value="" id="inputText"/>
-                    <button class="btn btn-default btn-sm" style="float: left" onclick="{saveImageName}">
-                        <span class="glyphicon glyphicon-ok"></span>
-                    </button>
+        <section id="dropBox" class="mybox col-lg-12" ondragover="{ondragOver}" ondrop="{showImages}">
+            <div class="swiper-container">
+                <!-- Additional required wrapper -->
+                <div class="swiper-wrapper">
+                    <!-- Slides -->
+                    <span class="swiper-slide" each="{option, choice in data.images}">
+                        <button class="btn btn-danger btn-sm" id="removeBtn" onclick="{deleteImage}">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                        <img class='thumbnail' src="{option.imageUrl}" title='preview image'/>
+                        <div if="{!data.wantToEdit}" class='thumbnailName' id="thumbnailName" ondblclick="{editImageName}">{option.imageName}</div>
+                        <div if="{data.wantToEdit}" id="editTags">
+                            <input type="text" value="" id="inputText"/>
+                            <button class="btn btn-default btn-sm" style="float: left" onclick="{saveImageName}">
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </button>
+                        </div>
+                    </span>
                 </div>
-            </span>
-            <span class="col-lg-3 vertical-middle" id="addNewCourse">
-                <button class="btn btn-success btn-sm" onclick="{addInfo}">
-                    <span class="glyphicon glyphicon-plus"></span> Add
+                <span class="col-lg-3 vertical-middle" id="addNewCourse">
+                    <button class="btn btn-success btn-sm" onclick="{addInfo}">
+                        <span class="glyphicon glyphicon-plus"></span> Add
+                    </button>
+                </span>
+                
+                <!-- If we need pagination -->
+                <div class="swiper-pagination"></div>
+
+                <!-- If we need navigation buttons -->
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+
+                
+                <p class="append-buttons">
+                    <a href="#" class="prepend-2-slides">Prepend 2 Slides</a>
+                    <a href="#" class="prepend-slide">Prepend Slide</a>
+                    <a href="#" class="append-slide">Append Slide</a>
+                    <a href="#" class="append-2-slides">Append 2 Slides</a>
+                </p>
+            </div>
+            <div class="bottom-aligned col-lg-12" style="padding-left: 0px;">
+                <button type="button" class="btn btn-success btn-s" onclick="{uploadAll}">
+                    <span class="glyphicon glyphicon-upload"></span> Upload all
                 </button>
-            </span>
-        </div>
-        <div class="bottom-aligned col-lg-12" style="padding-left: 0px;">
-            <button type="button" class="btn btn-success btn-s" onclick="{uploadAll}">
-                <span class="glyphicon glyphicon-upload"></span> Upload all
-            </button>
-        </div>
+            </div>
+        </section>
     </div>
 
     <script>
@@ -102,8 +58,70 @@
         self.data.wantToEdit = false;
         var config = {
         imageId: "imageName"
-        }
+        }    
+        var activeIndex = '';
+        
+        
+        self.on('updated', function(){
+            var mySwiper = new Swiper ('.swiper-container', {
+            // Optional parameters
+            direction: 'horizontal',
+            loop: true,
+//            slidesPerView: 3,
+            slidesPerGroup: 3,
+            pagination: '.swiper-pagination',
+            nextButton: '.swiper-button-next',
+            prevButton: '.swiper-button-prev',
+//            initialSlide: 1,
+            centeredSlides: true,
+            paginationClickable: true,
+            spaceBetween: 30,
+          })  
+          
+            activeIndex = mySwiper.activeIndex;
+          
+          
+          deleteImage(e){
+            self.data.images.splice(0, 1);
+            mySwiper.removeSlide(0);
+            console.log("delete index is>>" , e);
+            console.log("swiper>>", mySwiper);
+            
+//            mySwiper.removeSlide(mySwiper.snapIndex);
+//            mySwiper.removeSlide(0);
+//            mySwiper.removeSlide(mySwiper.clickedIndex);
+//            mySwiper.removeSlide(mySwiper.clickedSlide);
+//            mySwiper.removeSlide(mySwiper.activeIndex);
+//            mySwiper.removeSlide(mySwiper.realIndex);
 
+//            self.update();
+            console.log("self.data.images after delete==", self.data.images);
+        }
+          
+            document.querySelector('.prepend-2-slides').addEventListener('click', function (e) {
+                e.preventDefault();
+                swiper.prependSlide([
+                    '<div class="swiper-slide">Slide ' + (--prependNumber) + '</div>',
+                    '<div class="swiper-slide">Slide ' + (--prependNumber) + '</div>'
+                ]);
+            });
+            document.querySelector('.prepend-slide').addEventListener('click', function (e) {
+                e.preventDefault();
+                swiper.prependSlide('<div class="swiper-slide">Slide ' + (--prependNumber) + '</div>');
+            });
+            document.querySelector('.append-slide').addEventListener('click', function (e) {
+                e.preventDefault();
+                swiper.appendSlide('<div class="swiper-slide">Slide ' + (++appendNumber) + '</div>');
+            });
+            document.querySelector('.append-2-slides').addEventListener('click', function (e) {
+                e.preventDefault();
+                swiper.appendSlide([
+                    '<div class="swiper-slide">Slide ' + (++appendNumber) + '</div>',
+                    '<div class="swiper-slide">Slide ' + (++appendNumber) + '</div>'
+                ]);
+            });
+        });
+        
         editImageName(e){
         self.data.wantToEdit = true;
         self.data.valueInEdit = document.getElementById('thumbnailName').innerHTML;
@@ -125,19 +143,18 @@
 //            self.data.images.push({imageName:"some info", imageUrl:"some info"});
         }
 
-        deleteImage(){
-        self.data.images.splice(0, 1);
-        console.log("self.data.images after delete==", self.data.images);
-        }
+        
 
         showImages(e){
         e.stopPropagation(); e.preventDefault();
         if (e.type == 'change'){
         self._preview(e.target.files);
         self.all.push(e.target.files);
+        self.update();
         } else{
         self._preview(e.dataTransfer.files);
         self.all.push(e.dataTransfer.files);
+        self.update();
         }
         }
 
@@ -177,7 +194,7 @@
         if (self.all.length > 0){
         for (var k = 0; k < self.all.length; k++){
         var file = self.all[k];
-//                    self._uploader(file,0);
+        //                    self._uploader(file,0);
         }
         }
         }
@@ -225,8 +242,119 @@
         console.log("input==", input);
         return false;
         }
-
-
     </script>
+
+    <style scoped>
+        html, body { height: 100%; }
+        
+        /*Start:swiper css*/
+        .swiper-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px auto;
+        }
+        .swiper-slide {
+            text-align: center;
+            font-size: 18px;
+            background: #fff;
+            width: auto !important;
+
+            /* Center slide text vertically */
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+        }
+        .append-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .append-buttons a {
+            display: inline-block;
+            border: 1px solid #007aff;
+            color: #007aff;
+            text-decoration: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+        /*end:swiper css*/ 
+
+        ul#images li{
+            display: inline;
+        }
+
+        .thumbnail {
+            display: inline !important;
+            width:200px;
+            padding: 2px;
+            height: 194px;
+            margin: 10px 0px;
+        }
+
+        .thumbnailName{
+            /*width:200px; text-align:center; padding: 2px;*/
+            position: absolute;
+            margin-top: 113px;
+        }
+
+        .mybox {
+            border: 1px solid bisque;
+            width: 80%;
+            min-height: 220px;
+            height: 50%;
+            margin-top: 50px;
+        }
+
+        .bottom-aligned {
+            box-sizing: border-box;
+        }
+
+        #removeBtn{
+/*            margin: 11px 1px;
+            position: absolute;
+            padding: 3px 7px;*/
+            margin: 83px 0px 0px -85px;
+            position: absolute;
+            padding: 3px 7px;
+        }
+
+        #addNewCourse{
+            width: 200px;
+            height: 200px;
+            margin-top: 12px;
+        }
+
+        .vertical-middle{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #editTags button{
+            margin-left: 2px;
+            border-radius: 0px;
+            padding: 3px 9px;
+        }
+        #editTags{
+            resize: horizontal;
+            text-align: center;
+            margin-left: 8px;
+        }
+        #inputText{
+            width: 145px;
+            resize: horizontal;
+            /* overflow: auto; */
+            float: left;
+        }
+    </style>
 </rsc-secured1>
 
